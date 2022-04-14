@@ -19,11 +19,21 @@ $(function(){
                 $children.eq(flagRoll-1).removeClass("iHide");
             }
         }
-        
 
+        // * ---------------- desktop support
+
+        const setWidth = () => {
+            const w = (document.querySelector(".idp-new2")?.offsetWidth / 100 + 'px') ?? "1vw";
+            document.documentElement.style.setProperty("--w", w);
+        };
+        setWidth();
+        window.addEventListener("resize", setWidth);
+
+        // * ---------------- 
         
         var touchY, oldY, deltaY;
         var posY;
+        var mouseTouch = false;
         var duration = $wrapper.css("transition-duration");
             $(window).on({
                 mousewheel: function(e){
@@ -35,6 +45,39 @@ $(function(){
                     }
                     roll($wrapper,action);
                 },
+
+                mousedown: function(e){
+                    mouseTouch = true;
+                    var e = e.originalEvent;
+                    oldY = e.clientY
+                    posY = $wrapper.css("transform").split(",")[5].slice(1,-1) - 0;
+                    $wrapper.stop().css({
+                        "transition-duration": "0s",
+                        "transform":"translate3d(0,"+posY+"px,0)"
+                    });
+                },
+                mousemove: function(e){
+                    if (!mouseTouch) return;
+                    e.preventDefault();
+                    var e = e.originalEvent;
+                    touchY = e.clientY;
+                    deltaY = touchY - oldY;
+                    $wrapper.stop().css({
+                        "transition-duration": "0s",
+                        "transform":"translate3d(0,"+(posY+deltaY)+"px,0)"
+                    });
+                },
+                mouseup: function(e){
+                    mouseTouch = false;
+                    var e = e.originalEvent;
+                    action = (deltaY > range) ? "up" :  ((deltaY < -range) ? "down" : "none")
+                    // action =  (touchY>oldY)? "up":"down";
+                    $wrapper.css({
+                        "transition-duration": duration
+                    });
+                    roll($wrapper,action);
+                },
+
                 touchstart: function(e){
                     var e = e.originalEvent.touches;
                     oldY = e[0].clientY;
